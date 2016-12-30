@@ -2,11 +2,17 @@ import Ember from 'ember';
 import THREE from 'npm:three';
 import shaders from 'threejs-in-ember/ember-stringify';
 import Cube from '../threejs/cube';
+import {
+  shouldRotate,
+  rotationDeltas,
+  normalizedCoordinates
+} from '../threejs/rotation-helpers';
 
 const CAMERA_FOV = 75;
 const CAMERA_DISTANCE = 5;
 const CAMERA_NEAR_PLANE = 0.1;
 const CAMERA_FAR_PLANE = 1000.0;
+const CUBE_ROTATION_DELTA = 0.005;
 
 // TODO: party mode, ember-concurrency
 
@@ -44,10 +50,7 @@ export default Ember.Component.extend({
 
   animate() {
     requestAnimationFrame(this.animate.bind(this));
-    let cube = this.get('cube');
-    cube.rotation.x += 0.005;
-    cube.rotation.y += 0.005;
-
+    this.rotateCube(CUBE_ROTATION_DELTA, CUBE_ROTATION_DELTA);
     this.updateScale();
     this.draw();
   },
@@ -69,9 +72,9 @@ export default Ember.Component.extend({
   },
 
   mouseMove(event) {
-    this.set('mousePosition', this.normalizedCoordinates(event));
-    event.preventDefault();
     this.handleUserRotation(event);
+    this.set('dragPosition', normalizedCoordinates(event, this.get('element')));
+    event.preventDefault();
   },
 
   mouseUp() {
@@ -80,7 +83,7 @@ export default Ember.Component.extend({
 
   rotateCube(x, y) {
     let cube = this.get('cube');
-    cube.rotation.x += -y;
+    cube.rotation.x += y;
     cube.rotation.y += x;
   },
 
@@ -136,49 +139,10 @@ export default Ember.Component.extend({
     return displayWidth !== canvas.width || displayHeight !== canvas.height;
   }).volatile(),
 
-  normalizedCoordinates(event) {
-    let element = this.get('element');
-    let displayWidth  = element.clientWidth;
-    let displayHeight = element.clientHeight;
-    let coordinates = this.coordinatesFromEvent(event);
-
-    return {
-      x: coordinates.x / displayWidth,
-      y: coordinates.y / displayHeight
-    };
-  },
-
-  coordinatesToRotateByFromEvent(event) {
-    let dragPosition = this.get('dragPosition');
-    if (!dragPosition) { dragPosition = this.normalizedCoordinates(event); }
-    let newPosition = this.normalizedCoordinates(event);
-    let x = newPosition.x - dragPosition.x;
-    let y = newPosition.y - dragPosition.y;
-    this.set('dragPosition', newPosition);
-    return {x: x, y: y};
-  },
-
   handleUserRotation(event) {
-    if (!this.shouldRotate(event)) { return; }
+    if (!shouldRotate(event)) { return; }
 
-    let { x, y } = this.coordinatesToRotateByFromEvent(event);
+    let { x, y } = rotationDeltas(event, this.get('element'), this.get('dragPosition'));
     this.rotateCube(x, y);
-  },
-
-  coordinatesFromEvent(event) {
-    let coordinates = { x: null, y: null };
-    if (event.buttons) {
-      coordinates.x = event.clientX;
-      coordinates.y = event.clientY;
-    } else if (event.touches) {
-      coordinates.x = event.touches[0].clientX;
-      coordinates.y = event.touches[0].clientY;
-    }
-
-    return coordinates;
-  },
-
-  shouldRotate(event) {
-    return !!event.buttons || !!event.touches;
   }
 });
