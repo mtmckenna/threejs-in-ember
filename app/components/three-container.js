@@ -64,8 +64,8 @@ export default Ember.Component.extend({
     this.mouseMove(event);
   },
 
-  touchEnd(event) {
-    this.mouseUp(event);
+  touchEnd() {
+    this.mouseUp();
   },
 
   mouseMove(event) {
@@ -74,7 +74,7 @@ export default Ember.Component.extend({
     this.handleUserRotation(event);
   },
 
-  mouseUp(event) {
+  mouseUp() {
     this.set('dragPosition', null);
   },
 
