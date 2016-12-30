@@ -2,11 +2,7 @@ import Ember from 'ember';
 import THREE from 'npm:three';
 import shaders from 'threejs-in-ember/ember-stringify';
 import Cube from '../threejs/cube';
-import {
-  shouldRotate,
-  rotationDeltas,
-  normalizedCoordinates
-} from '../threejs/rotation-helpers';
+import Rotator from '../threejs/rotator';
 
 const CAMERA_FOV = 75;
 const CAMERA_DISTANCE = 5;
@@ -22,6 +18,35 @@ export default Ember.Component.extend({
   classNames: ['three-container'],
   dragPosition: null,
   mousePosition: { x: 0, y: 0 },
+
+  rotator: Ember.computed(function() {
+    return new Rotator(this.get('element'));
+  }),
+
+  scene: Ember.computed(function() {
+    return new THREE.Scene();
+  }),
+
+  glRenderer: Ember.computed(function() {
+    let glRenderer = new THREE.WebGLRenderer({ alpha: true });
+    return glRenderer;
+  }),
+
+  camera: Ember.computed(function() {
+    let element = this.get('element');
+    let displayWidth = element.clientWidth;
+    let displayHeight = element.clientHeight;
+
+    let camera = new THREE.PerspectiveCamera(
+      CAMERA_FOV,
+      displayWidth / displayHeight,
+      CAMERA_NEAR_PLANE,
+      CAMERA_FAR_PLANE
+    );
+
+    camera.position.z = CAMERA_DISTANCE;
+    return camera;
+  }),
 
   didInsertElement() {
     Ember.run.scheduleOnce('afterRender', () => {
@@ -73,12 +98,18 @@ export default Ember.Component.extend({
 
   mouseMove(event) {
     this.handleUserRotation(event);
-    this.set('dragPosition', normalizedCoordinates(event, this.get('element')));
     event.preventDefault();
   },
 
   mouseUp() {
-    this.set('dragPosition', null);
+    this.get('rotator').userStoppedRotating();
+  },
+
+  handleUserRotation(event) {
+    let rotator = this.get('rotator');
+    if (!rotator.shouldRotate(event)) { return; }
+    let { x, y } = rotator.rotationDeltas(event);
+    this.rotateCube(x, y);
   },
 
   rotateCube(x, y) {
@@ -92,31 +123,6 @@ export default Ember.Component.extend({
     let scale = this.get('scale') || 1.0;
     cube.scale(scale);
   },
-
-  scene: Ember.computed(function() {
-    return new THREE.Scene();
-  }),
-
-  glRenderer: Ember.computed(function() {
-    let glRenderer = new THREE.WebGLRenderer({ alpha: true });
-    return glRenderer;
-  }),
-
-  camera: Ember.computed(function() {
-    let element = this.get('element');
-    let displayWidth = element.clientWidth;
-    let displayHeight = element.clientHeight;
-
-    let camera = new THREE.PerspectiveCamera(
-      CAMERA_FOV,
-      displayWidth / displayHeight,
-      CAMERA_NEAR_PLANE,
-      CAMERA_FAR_PLANE
-    );
-
-    camera.position.z = CAMERA_DISTANCE;
-    return camera;
-  }),
 
   resizeCanvas() {
     if (!this.get('canvasShouldResize')) { return; }
@@ -137,12 +143,5 @@ export default Ember.Component.extend({
     let displayWidth  = element.clientWidth;
     let displayHeight = element.clientHeight;
     return displayWidth !== canvas.width || displayHeight !== canvas.height;
-  }).volatile(),
-
-  handleUserRotation(event) {
-    if (!shouldRotate(event)) { return; }
-
-    let { x, y } = rotationDeltas(event, this.get('element'), this.get('dragPosition'));
-    this.rotateCube(x, y);
-  }
+  }).volatile()
 });
