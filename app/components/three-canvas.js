@@ -2,6 +2,8 @@ import Ember from 'ember';
 import THREE from 'npm:three';
 import shaders from 'threejs-in-ember/ember-stringify';
 
+// TODO: resize, texture loader, css, party mode, slider, dragging, netlify, getters
+
 export default Ember.Component.extend({
 	vertexShader: shaders['vertex.glsl'],
 	fragmentShader: shaders['fragment.glsl'],
@@ -35,8 +37,8 @@ export default Ember.Component.extend({
 	animate() {
 		requestAnimationFrame(this.animate.bind(this));
 		let cube = this.get('cube');
-		cube.rotation.x += 0.05;
-		cube.rotation.y += 0.05;
+		cube.rotation.x += 0.005;
+		cube.rotation.y += 0.005;
 		var elapsedMilliseconds = Date.now() - this.get('startTime');
 		var elapsedSeconds = elapsedMilliseconds / 1000.;
 		this.set('time', 60. * elapsedSeconds);
@@ -64,8 +66,7 @@ export default Ember.Component.extend({
 	}),
 
 	glRenderer: Ember.computed(function() {
-		let glRenderer = new THREE.WebGLRenderer();
-		glRenderer.setClearColor (0xffff00, 1);
+		let glRenderer = new THREE.WebGLRenderer({ alpha: true });
 		return glRenderer;
 	}),
 
