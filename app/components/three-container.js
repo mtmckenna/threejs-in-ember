@@ -10,14 +10,12 @@ const CAMERA_NEAR_PLANE = 0.1;
 const CAMERA_FAR_PLANE = 1000.0;
 const CUBE_ROTATION_DELTA = 0.005;
 
-// TODO: party mode, ember-concurrency
+// TODO: party mode, ember-concurrency, losing context
 
 export default Ember.Component.extend({
   vertexShader: shaders['vertex.glsl'],
   fragmentShader: shaders['fragment.glsl'],
   classNames: ['three-container'],
-  dragPosition: null,
-  mousePosition: { x: 0, y: 0 },
 
   rotator: Ember.computed(function() {
     return new Rotator(this.get('element'));
