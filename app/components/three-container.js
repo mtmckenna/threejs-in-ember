@@ -1,8 +1,14 @@
 import Ember from 'ember';
 import THREE from 'npm:three';
 import shaders from 'threejs-in-ember/ember-stringify';
+import Cube from '../threejs/cube';
 
-// TODO: party mode, dragging, netlify, getters, ember-concurrency, wrap three.js in its own class
+const CAMERA_FOV = 75;
+const CAMERA_DISTANCE = 5;
+const CAMERA_NEAR_PLANE = 0.1;
+const CAMERA_FAR_PLANE = 1000.0;
+
+// TODO: party mode, dragging, netlify, ember-concurrency
 
 export default Ember.Component.extend({
   vertexShader: shaders['vertex.glsl'],
@@ -22,14 +28,15 @@ export default Ember.Component.extend({
     let loader = new THREE.TextureLoader();
     loader.load('ember-logo.png', (texture) => {
       if (this.isDestroyed || this.isDestroying) { return; }
-      this.set('texture', texture);
+      let cube = new Cube(this.vertexShader, this.fragmentShader, texture);
+      this.set('cube', cube);
       this.startAnimation();
     });
   },
 
   startAnimation() {
     let cube = this.get('cube');
-    this.get('scene').add(cube);
+    this.get('scene').add(cube.mesh);
     this.animate();
   },
 
@@ -54,14 +61,8 @@ export default Ember.Component.extend({
   updateScale() {
     let cube = this.get('cube');
     let scale = this.get('scale') || 1.0;
-    cube.scale.set(scale, scale, scale);
+    cube.scale(scale);
   },
-
-  uniforms: Ember.computed(function() {
-    return {
-      texture: { type: "t", value: this.get('texture') }
-    };
-  }),
 
   scene: Ember.computed(function() {
     return new THREE.Scene();
@@ -74,39 +75,18 @@ export default Ember.Component.extend({
 
   camera: Ember.computed(function() {
     let element = this.get('element');
-    let displayWidth  = element.clientWidth;
+    let displayWidth = element.clientWidth;
     let displayHeight = element.clientHeight;
 
-    let camera = new THREE.PerspectiveCamera(75,
-                                             displayWidth / displayHeight,
-                                             0.1,
-                                             1000.0);
-                                             camera.position.z = 5;
-                                             return camera;
-  }),
+    let camera = new THREE.PerspectiveCamera(
+      CAMERA_FOV,
+      displayWidth / displayHeight,
+      CAMERA_NEAR_PLANE,
+      CAMERA_FAR_PLANE
+    );
 
-  geometry: Ember.computed(function() {
-    var geometry = new THREE.BoxGeometry(1, 1, 1);
-    return geometry;
-  }),
-
-  material: Ember.computed(function() {
-    let vertexShader = this.get('vertexShader');
-    let fragmentShader = this.get('fragmentShader');
-    let uniforms = this.get('uniforms');
-
-    return new THREE.ShaderMaterial({
-      vertexShader: vertexShader,
-      fragmentShader: fragmentShader,
-      uniforms: uniforms
-    });
-  }),
-
-  cube: Ember.computed(function() {
-    let geometry = this.get('geometry');
-    let material = this.get('material');
-    let cube = new THREE.Mesh(geometry, material);
-    return cube;
+    camera.position.z = CAMERA_DISTANCE;
+    return camera;
   }),
 
   resizeCanvas() {
