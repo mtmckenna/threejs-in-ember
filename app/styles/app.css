@@ -16,7 +16,7 @@ canvas {
   height: 100%;
 }
 
-.three-canvas {
+.three-container {
   height: 100%;
   width: 100%;
   position: absolute;

@@ -1,7 +1,7 @@
 import { moduleForComponent, test } from 'ember-qunit';
 import hbs from 'htmlbars-inline-precompile';
 
-moduleForComponent('three-canvas', 'Integration | Component | three canvas', {
+moduleForComponent('three-container', 'Integration | Component | three container', {
   integration: true
 });
 
@@ -10,7 +10,7 @@ test('it renders', function(assert) {
   // Set any properties with this.set('myProperty', 'value');
   // Handle any actions with this.on('myAction', function(val) { ... });
 
-  this.render(hbs`{{three-canvas}}`);
+  this.render(hbs`{{three-container}}`);
 
   assert.equal(this.$().text().trim(), '');
 });

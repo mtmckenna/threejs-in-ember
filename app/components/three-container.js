@@ -2,13 +2,12 @@ import Ember from 'ember';
 import THREE from 'npm:three';
 import shaders from 'threejs-in-ember/ember-stringify';
 
-// TODO: texture loader, party mode, dragging, netlify, getters, rename to box, ember-concurrency
+// TODO: texture loader, party mode, dragging, netlify, getters, ember-concurrency, wrap three.js in its own class
 
 export default Ember.Component.extend({
   vertexShader: shaders['vertex.glsl'],
   fragmentShader: shaders['fragment.glsl'],
-  classNames: ['three-canvas'],
-
+  classNames: ['three-container'],
 
   didInsertElement() {
     Ember.run.scheduleOnce('afterRender', () => {
