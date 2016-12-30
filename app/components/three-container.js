@@ -8,12 +8,14 @@ const CAMERA_DISTANCE = 5;
 const CAMERA_NEAR_PLANE = 0.1;
 const CAMERA_FAR_PLANE = 1000.0;
 
-// TODO: party mode, dragging, netlify, ember-concurrency
+// TODO: party mode, ember-concurrency
 
 export default Ember.Component.extend({
   vertexShader: shaders['vertex.glsl'],
   fragmentShader: shaders['fragment.glsl'],
   classNames: ['three-container'],
+  dragPosition: null,
+  mousePosition: { x: 0, y: 0 },
 
   didInsertElement() {
     Ember.run.scheduleOnce('afterRender', () => {
@@ -56,6 +58,30 @@ export default Ember.Component.extend({
     let scene = this.get('scene');
     let camera = this.get('camera');
     glRenderer.render(scene, camera);
+  },
+
+  touchMove(event) {
+    this.mouseMove(event);
+  },
+
+  touchEnd(event) {
+    this.mouseUp(event);
+  },
+
+  mouseMove(event) {
+    this.set('mousePosition', this.normalizedCoordinates(event));
+    event.preventDefault();
+    this.handleUserRotation(event);
+  },
+
+  mouseUp(event) {
+    this.set('dragPosition', null);
+  },
+
+  rotateCube(x, y) {
+    let cube = this.get('cube');
+    cube.rotation.x += -y;
+    cube.rotation.y += x;
   },
 
   updateScale() {
@@ -108,5 +134,51 @@ export default Ember.Component.extend({
     let displayWidth  = element.clientWidth;
     let displayHeight = element.clientHeight;
     return displayWidth !== canvas.width || displayHeight !== canvas.height;
-  }).volatile()
+  }).volatile(),
+
+  normalizedCoordinates(event) {
+    let element = this.get('element');
+    let displayWidth  = element.clientWidth;
+    let displayHeight = element.clientHeight;
+    let coordinates = this.coordinatesFromEvent(event);
+
+    return {
+      x: coordinates.x / displayWidth,
+      y: coordinates.y / displayHeight
+    };
+  },
+
+  coordinatesToRotateByFromEvent(event) {
+    let dragPosition = this.get('dragPosition');
+    if (!dragPosition) { dragPosition = this.normalizedCoordinates(event); }
+    let newPosition = this.normalizedCoordinates(event);
+    let x = newPosition.x - dragPosition.x;
+    let y = newPosition.y - dragPosition.y;
+    this.set('dragPosition', newPosition);
+    return {x: x, y: y};
+  },
+
+  handleUserRotation(event) {
+    if (!this.shouldRotate(event)) { return; }
+
+    let { x, y } = this.coordinatesToRotateByFromEvent(event);
+    this.rotateCube(x, y);
+  },
+
+  coordinatesFromEvent(event) {
+    let coordinates = { x: null, y: null };
+    if (event.buttons) {
+      coordinates.x = event.clientX;
+      coordinates.y = event.clientY;
+    } else if (event.touches) {
+      coordinates.x = event.touches[0].clientX;
+      coordinates.y = event.touches[0].clientY;
+    }
+
+    return coordinates;
+  },
+
+  shouldRotate(event) {
+    return !!event.buttons || !!event.touches;
+  }
 });

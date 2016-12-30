@@ -1,5 +1,7 @@
 import THREE from 'npm:three';
 
+const CUBE_SIZE = 2;
+
 export default class {
   constructor(vertexShader, fragmentShader, texture) {
     this.vertexShader = vertexShader;
@@ -42,7 +44,7 @@ export default class {
   get geometry() {
     if (this._geometry) { return this._geometry; }
 
-    this._geometry = new THREE.BoxGeometry(1, 1, 1);
+    this._geometry = new THREE.BoxGeometry(CUBE_SIZE, CUBE_SIZE, CUBE_SIZE);
 
     return this._geometry;
   }
