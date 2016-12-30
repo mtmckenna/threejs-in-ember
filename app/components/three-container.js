@@ -2,7 +2,7 @@ import Ember from 'ember';
 import THREE from 'npm:three';
 import shaders from 'threejs-in-ember/ember-stringify';
 
-// TODO: texture loader, party mode, dragging, netlify, getters, ember-concurrency, wrap three.js in its own class
+// TODO: party mode, dragging, netlify, getters, ember-concurrency, wrap three.js in its own class
 
 export default Ember.Component.extend({
   vertexShader: shaders['vertex.glsl'],
@@ -23,24 +23,14 @@ export default Ember.Component.extend({
     loader.load('ember-logo.png', (texture) => {
       if (this.isDestroyed || this.isDestroying) { return; }
       this.set('texture', texture);
-      let cube = this.get('cube');
-      this.get('scene').add(cube);
-      this.animate();
+      this.startAnimation();
     });
-
   },
 
-  resizeCanvas() {
-    if (!this.get('canvasShouldResize')) { return; }
-    let glRenderer = this.get('glRenderer');
-    let camera = this.get('camera');
-    let element = this.get('element');
-    let width = element.clientWidth;
-    let height = element.clientHeight;
-
-    glRenderer.setSize(width, height);
-    camera.aspect	= width / height;
-    camera.updateProjectionMatrix();
+  startAnimation() {
+    let cube = this.get('cube');
+    this.get('scene').add(cube);
+    this.animate();
   },
 
   animate() {
@@ -53,18 +43,18 @@ export default Ember.Component.extend({
     this.draw();
   },
 
-  updateScale() {
-    let cube = this.get('cube');
-    let scale = this.get('scale') || 1.0;
-    cube.scale.set(scale, scale, scale);
-  },
-
   draw() {
     this.resizeCanvas();
     let glRenderer = this.get('glRenderer');
     let scene = this.get('scene');
     let camera = this.get('camera');
     glRenderer.render(scene, camera);
+  },
+
+  updateScale() {
+    let cube = this.get('cube');
+    let scale = this.get('scale') || 1.0;
+    cube.scale.set(scale, scale, scale);
   },
 
   uniforms: Ember.computed(function() {
@@ -118,6 +108,19 @@ export default Ember.Component.extend({
     let cube = new THREE.Mesh(geometry, material);
     return cube;
   }),
+
+  resizeCanvas() {
+    if (!this.get('canvasShouldResize')) { return; }
+    let glRenderer = this.get('glRenderer');
+    let camera = this.get('camera');
+    let element = this.get('element');
+    let width = element.clientWidth;
+    let height = element.clientHeight;
+
+    glRenderer.setSize(width, height);
+    camera.aspect	= width / height;
+    camera.updateProjectionMatrix();
+  },
 
   canvasShouldResize: Ember.computed(function() {
     let canvas = this.get('glRenderer').domElement;
