@@ -10,12 +10,13 @@ const CAMERA_NEAR_PLANE = 0.1;
 const CAMERA_FAR_PLANE = 1000.0;
 const CUBE_ROTATION_DELTA = 0.005;
 
-// TODO: party mode, ember-concurrency, losing context
+// TODO: party mode, ember-concurrency, losing context, improve lighting
 
 export default Ember.Component.extend({
   vertexShader: shaders['vertex.glsl'],
   fragmentShader: shaders['fragment.glsl'],
   classNames: ['three-container'],
+
 
   rotator: Ember.computed(function() {
     return new Rotator(this.get('element'));
@@ -31,13 +32,11 @@ export default Ember.Component.extend({
   }),
 
   camera: Ember.computed(function() {
-    let element = this.get('element');
-    let displayWidth = element.clientWidth;
-    let displayHeight = element.clientHeight;
+    let dimensions = this.get('dimensions');
 
     let camera = new THREE.PerspectiveCamera(
       CAMERA_FOV,
-      displayWidth / displayHeight,
+      dimensions.width / dimensions.height,
       CAMERA_NEAR_PLANE,
       CAMERA_FAR_PLANE
     );
@@ -45,6 +44,19 @@ export default Ember.Component.extend({
     camera.position.z = CAMERA_DISTANCE;
     return camera;
   }),
+
+  canvasShouldResize: Ember.computed(function() {
+    let canvas = this.get('glRenderer').domElement;
+    let dimensions = this.get('dimensions');
+    return dimensions.width !== canvas.width || dimensions.height !== canvas.height;
+  }).volatile(),
+
+  dimensions: Ember.computed(function() {
+    let element = this.get('element');
+    let displayWidth = element.clientWidth;
+    let displayHeight = element.clientHeight;
+    return { width: displayWidth, height: displayHeight };
+  }).volatile(),
 
   didInsertElement() {
     Ember.run.scheduleOnce('afterRender', () => {
@@ -74,16 +86,14 @@ export default Ember.Component.extend({
   animate() {
     requestAnimationFrame(this.animate.bind(this));
     this.rotateCube(CUBE_ROTATION_DELTA, CUBE_ROTATION_DELTA);
-    this.updateScale();
     this.draw();
   },
 
   draw() {
+    this.updateScale();
     this.resizeCanvas();
     let glRenderer = this.get('glRenderer');
-    let scene = this.get('scene');
-    let camera = this.get('camera');
-    glRenderer.render(scene, camera);
+    glRenderer.render(this.get('scene'), this.get('camera'));
   },
 
   touchMove(event) {
@@ -117,29 +127,18 @@ export default Ember.Component.extend({
   },
 
   updateScale() {
-    let cube = this.get('cube');
     let scale = this.get('scale') || 1.0;
-    cube.scale(scale);
+    this.get('cube').scale(scale);
   },
 
   resizeCanvas() {
     if (!this.get('canvasShouldResize')) { return; }
     let glRenderer = this.get('glRenderer');
     let camera = this.get('camera');
-    let element = this.get('element');
-    let width = element.clientWidth;
-    let height = element.clientHeight;
+    let dimensions = this.get('dimensions');
 
-    glRenderer.setSize(width, height);
-    camera.aspect	= width / height;
+    glRenderer.setSize(dimensions.width, dimensions.height);
+    camera.aspect	= dimensions.width / dimensions.height;
     camera.updateProjectionMatrix();
-  },
-
-  canvasShouldResize: Ember.computed(function() {
-    let canvas = this.get('glRenderer').domElement;
-    let element = this.get('element');
-    let displayWidth  = element.clientWidth;
-    let displayHeight = element.clientHeight;
-    return displayWidth !== canvas.width || displayHeight !== canvas.height;
-  }).volatile()
+  }
 });

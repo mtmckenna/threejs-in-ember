@@ -3,37 +3,52 @@ export default class {
     this.element = element;
   }
 
+  get dimensions() {
+    if (!this.element) { return { width: null, height: null }; }
+    return { width: this.element.clientWidth, height: this.element.clientHeight };
+  }
+
   rotationDeltas(event) {
     let newCoordinates = this.normalizedCoordinates(event, this.element);
     if (!this.currentCoordinates) { this.currentCoordinates = newCoordinates; }
+    let deltas = this.coordinateDeltas(newCoordinates);
+    this.currentCoordinates = newCoordinates;
+    return deltas;
+  }
+
+  coordinateDeltas(newCoordinates) {
     let x = newCoordinates.x - this.currentCoordinates.x;
     let y = newCoordinates.y - this.currentCoordinates.y;
-    this.currentCoordinates = newCoordinates;
     return { x: x, y: y };
   }
 
   normalizedCoordinates(event) {
-    let displayWidth  = this.element.clientWidth;
-    let displayHeight = this.element.clientHeight;
     let coordinates = this.coordinatesFromEvent(event);
 
     return {
-      x: coordinates.x / displayWidth,
-      y: coordinates.y / displayHeight
+      x: coordinates.x / this.dimensions.width,
+      y: coordinates.y / this.dimensions.height
     };
   }
 
   coordinatesFromEvent(event) {
     let coordinates = { x: null, y: null };
+
     if (event.buttons) {
-      coordinates.x = event.clientX;
-      coordinates.y = event.clientY;
+      coordinates = this.mouseCoordinatesFromEvent(event);
     } else if (event.touches) {
-      coordinates.x = event.touches[0].clientX;
-      coordinates.y = event.touches[0].clientY;
+      coordinates = this.touchCoordinatesFromEvent(event);
     }
 
     return coordinates;
+  }
+
+  mouseCoordinatesFromEvent(event) {
+    return { x: event.clientX, y: event.clientY };
+  }
+
+  touchCoordinatesFromEvent(event) {
+    return { x: event.touches[0].clientX, y: event.touches[0].clientY };
   }
 
   shouldRotate(event) {
