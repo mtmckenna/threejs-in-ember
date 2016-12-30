@@ -4,15 +4,19 @@ html, body {
   margin: 0;
 }
 
-.ember-view {
-  height: 100%;
-}
-
 body {
   background-color: rgb(235, 235, 235);
 }
 
-.cube-canvas {
+canvas {
+  display: block;
+}
+
+.ember-view {
+  height: 100%;
+}
+
+.three-canvas {
   height: 100%;
   width: 100%;
   position: absolute;
