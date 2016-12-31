@@ -1,4 +1,6 @@
-{{three-container scale=scale shapeData=model}}
+{{#liquid-bind model use="toLeft" class="three-liquid-container" as |currentModel|}}
+  {{three-container scale=scale shapeData=model}}
+{{/liquid-bind}}
 
 <div class="controls-container">
   <input class="scale-slider"

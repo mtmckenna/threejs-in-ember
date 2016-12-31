@@ -15,21 +15,15 @@ const CAMERA_NEAR_PLANE = 0.1;
 const CAMERA_FAR_PLANE = 1000.0;
 const ROTATION_DELTA = 0.005;
 
-// TODO: party mode, losing context, improve lighting, animate between shapes, loading
+// TODO: party mode, losing context, improve lighting, loading, don't go to next until shape has loaded
 
 export default Ember.Component.extend({
+  webgl: Ember.inject.service(),
   vertexShader: shaders['vertex.glsl'],
   fragmentShader: shaders['fragment.glsl'],
-  classNames: ['three-container'],
-
 
   rotator: Ember.computed(function() {
     return new Rotator(this.get('element'));
-  }),
-
-  glRenderer: Ember.computed(function() {
-    let glRenderer = new THREE.WebGLRenderer({ alpha: true });
-    return glRenderer;
   }),
 
   camera: Ember.computed(function() {
@@ -47,7 +41,7 @@ export default Ember.Component.extend({
   }),
 
   canvasShouldResize: Ember.computed(function() {
-    let canvas = this.get('glRenderer').domElement;
+    let canvas = this.get('webgl').get('renderer').domElement;
     let dimensions = this.get('dimensions');
     return dimensions.width !== canvas.width || dimensions.height !== canvas.height;
   }).volatile(),
@@ -59,15 +53,13 @@ export default Ember.Component.extend({
     return { width: displayWidth, height: displayHeight };
   }).volatile(),
 
-  didReceiveAttrs() {
+  init() {
     this._super(...arguments);
     this.configureShape();
   },
 
   didInsertElement() {
-    Ember.run.scheduleOnce('afterRender', () => {
-      this.configureScene();
-    });
+    this.addCanvasToElement();
   },
 
   loadTexturePromise(url) {
@@ -80,19 +72,26 @@ export default Ember.Component.extend({
     }).catch(() => {});
   },
 
-  loadTexture: task(function * (url) {
+  loadTextureTask: task(function * (url) {
     let texture = yield this.loadTexturePromise(url);
     this.set('texture', texture);
   }),
 
-  configureScene() {
-    let glRenderer = this.get('glRenderer');
+  animateTask: task(function * () {
+    /*jshint noyield:true */
+    this.rotate(ROTATION_DELTA, ROTATION_DELTA);
+    this.draw();
+    requestAnimationFrame(() => { this.get('animateTask').perform(); } );
+  }),
+
+  addCanvasToElement() {
+    let glRenderer = this.get('webgl').get('renderer');
     this.get('element').appendChild(glRenderer.domElement);
   },
 
   configureShape() {
     let shapeData = this.get('shapeData');
-    this.get('loadTexture').perform(shapeData.textureUrl)
+    this.get('loadTextureTask').perform(shapeData.textureUrl)
     .then(() => { this.startAnimation(); })
     .catch(function(e) { console.warn(e); });
   },
@@ -111,28 +110,13 @@ export default Ember.Component.extend({
   startAnimation() {
     this.createShape();
     this.addShapeToScene();
-    this.cancelAnimation();
-    this.animate();
-  },
-
-  cancelAnimation() {
-    let animationId = this.get('animationId');
-    if (animationId) {
-      cancelAnimationFrame(animationId);
-      this.set('animationId', null);
-    }
-  },
-
-  animate() {
-    this.set('animationId', requestAnimationFrame(this.animate.bind(this)));
-    this.rotate(ROTATION_DELTA, ROTATION_DELTA);
-    this.draw();
+    this.get('animateTask').perform();
   },
 
   draw() {
     this.updateScale();
     this.resizeCanvas();
-    let glRenderer = this.get('glRenderer');
+    let glRenderer = this.get('webgl').get('renderer');
     glRenderer.render(this.get('scene'), this.get('camera'));
   },
 
@@ -173,7 +157,7 @@ export default Ember.Component.extend({
 
   resizeCanvas() {
     if (!this.get('canvasShouldResize')) { return; }
-    let glRenderer = this.get('glRenderer');
+    let glRenderer = this.get('webgl').get('renderer');
     let camera = this.get('camera');
     let dimensions = this.get('dimensions');
 

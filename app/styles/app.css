@@ -14,11 +14,19 @@ canvas {
   display: block;
 }
 
-.three-container {
+.three-liquid-container {
   position: absolute;
   height: 100%;
   width: 100%;
   top: 0;
+}
+
+.three-liquid-container .liquid-child {
+  height: 100%;
+}
+
+.three-liquid-container .ember-view {
+  height: 100%;
 }
 
 .controls-container {
