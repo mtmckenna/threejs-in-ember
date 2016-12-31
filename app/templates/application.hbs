@@ -1,6 +1,6 @@
-{{three-container scale=scale}}
+{{three-container scale=scale shapeData=model}}
 
-<div class="scale-slider-wrapper">
+<div class="controls-container">
   <input class="scale-slider"
          type="range"
          min="0.05"
@@ -10,4 +10,6 @@
          value={{scale}}
          oninput={{action (action "updateScale")}}
          />
+
+  <button {{action "nextShape"}} class="next-shape-button">Next Shape</button>
 </div>

@@ -1,16 +1,18 @@
 import { moduleForComponent, test } from 'ember-qunit';
 import hbs from 'htmlbars-inline-precompile';
+import Cube from '../../../threejs/cube';
 
 moduleForComponent('three-container', 'Integration | Component | three container', {
   integration: true
 });
 
 test('it renders', function(assert) {
-
-  // Set any properties with this.set('myProperty', 'value');
-  // Handle any actions with this.on('myAction', function(val) { ... });
-
-  this.render(hbs`{{three-container}}`);
+  this.set('model', {
+    textureUrl: '/ember-logo.png',
+    shapeName: 'cube',
+    constructor: Cube
+  });
+  this.render(hbs`{{three-container shapeData=model}}`);
 
   assert.equal(this.$().text().trim(), '');
 });

@@ -1,18 +1,21 @@
+/*exported Cube, Sphere */
+
 import Ember from 'ember';
 import RSVP from 'rsvp';
 import { task } from 'ember-concurrency';
 import THREE from 'npm:three';
 import shaders from 'threejs-in-ember/ember-stringify';
 import Cube from '../threejs/cube';
+import Sphere from '../threejs/sphere';
 import Rotator from '../threejs/rotator';
 
 const CAMERA_FOV = 75;
 const CAMERA_DISTANCE = 5;
 const CAMERA_NEAR_PLANE = 0.1;
 const CAMERA_FAR_PLANE = 1000.0;
-const CUBE_ROTATION_DELTA = 0.005;
+const ROTATION_DELTA = 0.005;
 
-// TODO: party mode, ember-concurrency, losing context, improve lighting
+// TODO: party mode, losing context, improve lighting, animate between shapes, loading
 
 export default Ember.Component.extend({
   vertexShader: shaders['vertex.glsl'],
@@ -22,10 +25,6 @@ export default Ember.Component.extend({
 
   rotator: Ember.computed(function() {
     return new Rotator(this.get('element'));
-  }),
-
-  scene: Ember.computed(function() {
-    return new THREE.Scene();
   }),
 
   glRenderer: Ember.computed(function() {
@@ -60,6 +59,11 @@ export default Ember.Component.extend({
     return { width: displayWidth, height: displayHeight };
   }).volatile(),
 
+  didReceiveAttrs() {
+    this._super(...arguments);
+    this.configureShape();
+  },
+
   didInsertElement() {
     Ember.run.scheduleOnce('afterRender', () => {
       this.configureScene();
@@ -69,31 +73,59 @@ export default Ember.Component.extend({
   loadTexturePromise(url) {
     let loader = new THREE.TextureLoader();
     return new RSVP.Promise((resolve) => {
-      loader.load(url, (texture) => { resolve(texture); });
-    });
+      loader.load(
+        url,
+        (texture) => { resolve(texture); }
+      );
+    }).catch(() => {});
   },
 
-  loadTexture: task(function * () {
-    let texture = yield this.loadTexturePromise('ember-logo.png');
+  loadTexture: task(function * (url) {
+    let texture = yield this.loadTexturePromise(url);
     this.set('texture', texture);
   }),
 
   configureScene() {
     let glRenderer = this.get('glRenderer');
     this.get('element').appendChild(glRenderer.domElement);
-    this.get('loadTexture').perform().then(() => { this.startAnimation(); });
+  },
+
+  configureShape() {
+    let shapeData = this.get('shapeData');
+    this.get('loadTexture').perform(shapeData.textureUrl)
+    .then(() => { this.startAnimation(); })
+    .catch(function(e) { console.warn(e); });
+  },
+
+  createShape() {
+    let Shape = this.get('shapeData').constructor;
+    let shape = new Shape(this.vertexShader, this.fragmentShader, this.get('texture'));
+    this.set('shape', shape);
+  },
+
+  addShapeToScene() {
+    this.set('scene', new THREE.Scene());
+    this.get('scene').add(this.get('shape').mesh);
   },
 
   startAnimation() {
-    let cube = new Cube(this.vertexShader, this.fragmentShader, this.get('texture'));
-    this.set('cube', cube);
-    this.get('scene').add(cube.mesh);
+    this.createShape();
+    this.addShapeToScene();
+    this.cancelAnimation();
     this.animate();
   },
 
+  cancelAnimation() {
+    let animationId = this.get('animationId');
+    if (animationId) {
+      cancelAnimationFrame(animationId);
+      this.set('animationId', null);
+    }
+  },
+
   animate() {
-    requestAnimationFrame(this.animate.bind(this));
-    this.rotateCube(CUBE_ROTATION_DELTA, CUBE_ROTATION_DELTA);
+    this.set('animationId', requestAnimationFrame(this.animate.bind(this)));
+    this.rotate(ROTATION_DELTA, ROTATION_DELTA);
     this.draw();
   },
 
@@ -125,18 +157,18 @@ export default Ember.Component.extend({
     let rotator = this.get('rotator');
     if (!rotator.shouldRotate(event)) { return; }
     let { x, y } = rotator.rotationDeltas(event);
-    this.rotateCube(x, y);
+    this.rotate(x, y);
   },
 
-  rotateCube(x, y) {
-    let cube = this.get('cube');
-    cube.rotation.x += y;
-    cube.rotation.y += x;
+  rotate(x, y) {
+    let shape = this.get('shape');
+    shape.rotation.x += y;
+    shape.rotation.y += x;
   },
 
   updateScale() {
     let scale = this.get('scale') || 1.0;
-    this.get('cube').scale(scale);
+    this.get('shape').scale(scale);
   },
 
   resizeCanvas() {
