@@ -81,7 +81,7 @@ export default Ember.Component.extend({
   configureScene() {
     let glRenderer = this.get('glRenderer');
     this.get('element').appendChild(glRenderer.domElement);
-    this.get('loadTexture').perform().then((texture) => { this.startAnimation(); });
+    this.get('loadTexture').perform().then(() => { this.startAnimation(); });
   },
 
   startAnimation() {
