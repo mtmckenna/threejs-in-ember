@@ -1,4 +1,6 @@
 import Ember from 'ember';
+import RSVP from 'rsvp';
+import { task } from 'ember-concurrency';
 import THREE from 'npm:three';
 import shaders from 'threejs-in-ember/ember-stringify';
 import Cube from '../threejs/cube';
@@ -64,21 +66,27 @@ export default Ember.Component.extend({
     });
   },
 
-  configureScene() {
-    let glRenderer = this.get('glRenderer');
-    this.get('element').appendChild(glRenderer.domElement);
-
+  loadTexturePromise(url) {
     let loader = new THREE.TextureLoader();
-    loader.load('ember-logo.png', (texture) => {
-      if (this.isDestroyed || this.isDestroying) { return; }
-      let cube = new Cube(this.vertexShader, this.fragmentShader, texture);
-      this.set('cube', cube);
-      this.startAnimation();
+    return new RSVP.Promise((resolve) => {
+      loader.load(url, (texture) => { resolve(texture); });
     });
   },
 
+  loadTexture: task(function * () {
+    let texture = yield this.loadTexturePromise('ember-logo.png');
+    this.set('texture', texture);
+  }),
+
+  configureScene() {
+    let glRenderer = this.get('glRenderer');
+    this.get('element').appendChild(glRenderer.domElement);
+    this.get('loadTexture').perform().then((texture) => { this.startAnimation(); });
+  },
+
   startAnimation() {
-    let cube = this.get('cube');
+    let cube = new Cube(this.vertexShader, this.fragmentShader, this.get('texture'));
+    this.set('cube', cube);
     this.get('scene').add(cube.mesh);
     this.animate();
   },
