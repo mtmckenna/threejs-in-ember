@@ -15,7 +15,7 @@ const CAMERA_NEAR_PLANE = 0.1;
 const CAMERA_FAR_PLANE = 1000.0;
 const ROTATION_DELTA = 0.005;
 
-// TODO: losing context, swap between two contexts, partyMode for vertex shader
+// TODO: losing context
 
 export default Ember.Component.extend({
   webgl: Ember.inject.service(),
