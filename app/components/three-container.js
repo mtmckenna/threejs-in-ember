@@ -15,7 +15,7 @@ const CAMERA_NEAR_PLANE = 0.1;
 const CAMERA_FAR_PLANE = 1000.0;
 const ROTATION_DELTA = 0.005;
 
-// TODO: party mode, losing context, improve lighting, loading, don't go to next until shape has loaded
+// TODO: party mode, losing context, improve lighting
 
 export default Ember.Component.extend({
   webgl: Ember.inject.service(),
@@ -53,13 +53,10 @@ export default Ember.Component.extend({
     return { width: displayWidth, height: displayHeight };
   }).volatile(),
 
-  init() {
-    this._super(...arguments);
-    this.configureShape();
-  },
-
   didInsertElement() {
-    this.addCanvasToElement();
+    this.get('changeShapeTask').perform()
+    .then(() => { this.addCanvasToElement(); })
+    .catch(function(e) { console.warn(e); });
   },
 
   loadTexturePromise(url) {
@@ -69,8 +66,15 @@ export default Ember.Component.extend({
         url,
         (texture) => { resolve(texture); }
       );
-    }).catch(() => {});
+    });
   },
+
+  changeShapeTask: task(function * () {
+    /*jshint noyield:true */
+    let shapeData = this.get('shapeData');
+    yield this.get('loadTextureTask').perform(shapeData.textureUrl);
+    this.startAnimation();
+  }).restartable(),
 
   loadTextureTask: task(function * (url) {
     let texture = yield this.loadTexturePromise(url);
@@ -87,13 +91,6 @@ export default Ember.Component.extend({
   addCanvasToElement() {
     let glRenderer = this.get('webgl').get('renderer');
     this.get('element').appendChild(glRenderer.domElement);
-  },
-
-  configureShape() {
-    let shapeData = this.get('shapeData');
-    this.get('loadTextureTask').perform(shapeData.textureUrl)
-    .then(() => { this.startAnimation(); })
-    .catch(function(e) { console.warn(e); });
   },
 
   createShape() {

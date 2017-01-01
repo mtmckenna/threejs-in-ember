@@ -25,7 +25,7 @@ canvas {
   height: 100%;
 }
 
-.three-liquid-container .ember-view {
+.three-liquid-container > .liquid-child > .ember-view {
   height: 100%;
 }
 
@@ -53,4 +53,11 @@ canvas {
   padding: 5px 15px;
   box-shadow: none;
   font-size: 17px;
+}
+
+.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
 }
