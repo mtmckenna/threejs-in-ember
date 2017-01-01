@@ -15,7 +15,7 @@ const CAMERA_NEAR_PLANE = 0.1;
 const CAMERA_FAR_PLANE = 1000.0;
 const ROTATION_DELTA = 0.005;
 
-// TODO: party mode, losing context, swap between two contexts
+// TODO: losing context, swap between two contexts, partyMode for vertex shader
 
 export default Ember.Component.extend({
   webgl: Ember.inject.service(),
@@ -111,7 +111,8 @@ export default Ember.Component.extend({
   },
 
   draw() {
-    this.updateScale();
+    this.updateShapeProperties();
+    this.get('shape').updateUniforms();
     this.resizeCanvas();
     let glRenderer = this.get('webgl').get('renderer');
     glRenderer.render(this.get('scene'), this.get('camera'));
@@ -145,6 +146,16 @@ export default Ember.Component.extend({
     let shape = this.get('shape');
     shape.rotation.x += y;
     shape.rotation.y += x;
+  },
+
+  updateShapeProperties() {
+    this.updateScale();
+    this.updatePartyMode();
+  },
+
+  updatePartyMode() {
+    let partyMode = this.get('partyMode');
+    this.get('shape').partyMode = partyMode;
   },
 
   updateScale() {

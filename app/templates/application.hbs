@@ -1,5 +1,5 @@
 {{#liquid-bind model use="toLeft" class="three-liquid-container" as |currentModel|}}
-  {{three-container scale=scale shapeData=model}}
+  {{three-container scale=scale partyMode=partyMode shapeData=model}}
 {{/liquid-bind}}
 
 <div class="controls-container">
@@ -13,5 +13,12 @@
          oninput={{action (action "updateScale")}}
          />
 
-  <button {{action "nextShape"}} class="next-shape-button">Next Shape</button>
+  <div>
+    <button {{action "nextShape"}} class="next-shape-button">Next Shape</button>
+    <br />
+    <label class="party-mode-checkbox">
+      {{one-way-checkbox isPartyMode update=(action "updatePartyMode")}}
+      Party Mode
+    </label>
+  </div>
 </div>

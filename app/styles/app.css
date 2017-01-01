@@ -1,5 +1,6 @@
 html, body {
   height: 100%;
+  font-size: 17px;
   padding: 0;
   margin: 0;
   overflow: auto;
@@ -43,7 +44,7 @@ canvas {
 
 .next-shape-button {
   display:inline-block;
-  width: 160px;
+  min-width: 160px;
   background-color: rgba(227, 89, 66, 1.0);
   cursor: pointer;
   font-family: "Times New Roman", Times, serif;

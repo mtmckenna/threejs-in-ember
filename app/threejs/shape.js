@@ -5,6 +5,8 @@ export default class {
     this.vertexShader = vertexShader;
     this.fragmentShader = fragmentShader;
     this.texture = texture;
+    this.clock = new THREE.Clock();
+    this.partyMode = 0;
   }
 
   get mesh() {
@@ -30,13 +32,11 @@ export default class {
   }
 
   get uniforms() {
-    if (this._uniforms) { return this._uniforms; }
-
-    this._uniforms = {
-      texture: { type: 't', value: this.texture }
+    return {
+      uTexture: { type: 't', value: this.texture },
+      uPartyMode: { type: 'i', value: 0 },
+      uTime: { type: 'f', value: this.time }
     };
-
-    return this._uniforms;
   }
 
   get geometry() {
@@ -47,7 +47,18 @@ export default class {
     return this.mesh.rotation;
   }
 
+  get time() {
+    if (!this._time) { this._time = 1.0; }
+    this._time += this.clock.getDelta();
+    return this._time;
+  }
+
   scale(scale) {
     this.mesh.scale.set(scale, scale, scale);
+  }
+
+  updateUniforms() {
+    this.mesh.material.uniforms.uTime.value = this.time;
+    this.mesh.material.uniforms.uPartyMode.value = this.partyMode;
   }
 }
