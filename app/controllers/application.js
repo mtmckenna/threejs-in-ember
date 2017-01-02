@@ -18,8 +18,8 @@ export default Ember.Controller.extend({
       this.set('scale', event.target.value);
     },
 
-    updatePartyMode(event) {
-      let partyMode = event ? 1 : 0;
+    updatePartyMode(checked) {
+      let partyMode = checked ? 1 : 0;
       this.set('partyMode', partyMode);
     },
 
