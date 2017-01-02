@@ -8,12 +8,12 @@ export default class {
     return { width: this.element.clientWidth, height: this.element.clientHeight };
   }
 
-  get mousePressed() {
+  mousePressed(event) {
     // https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/which
     return !!event.buttons || !!event.which;
   }
 
-  get touchPressed() {
+  touchPressed(event) {
     return !!event.touches;
   }
 
@@ -43,9 +43,9 @@ export default class {
   coordinatesFromEvent(event) {
     let coordinates = { x: null, y: null };
 
-    if (this.mousePressed) {
+    if (this.mousePressed(event)) {
       coordinates = this.mouseCoordinatesFromEvent(event);
-    } else if (this.touchPressed) {
+    } else if (this.touchPressed(event)) {
       coordinates = this.touchCoordinatesFromEvent(event);
     }
 
@@ -61,7 +61,7 @@ export default class {
   }
 
   shouldRotate(event) {
-    return this.mousePressed || this.touchPressed;
+    return this.mousePressed(event) || this.touchPressed(event);
   }
 
   userStoppedRotating() {
