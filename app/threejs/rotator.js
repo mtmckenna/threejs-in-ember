@@ -8,6 +8,15 @@ export default class {
     return { width: this.element.clientWidth, height: this.element.clientHeight };
   }
 
+  get mousePressed() {
+    // https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/which
+    return !!event.buttons || !!event.which;
+  }
+
+  get touchPressed() {
+    return !!event.touches;
+  }
+
   rotationDeltas(event) {
     let newCoordinates = this.normalizedCoordinates(event, this.element);
     if (!this.currentCoordinates) { this.currentCoordinates = newCoordinates; }
@@ -34,9 +43,9 @@ export default class {
   coordinatesFromEvent(event) {
     let coordinates = { x: null, y: null };
 
-    if (event.buttons) {
+    if (this.mousePressed) {
       coordinates = this.mouseCoordinatesFromEvent(event);
-    } else if (event.touches) {
+    } else if (this.touchPressed) {
       coordinates = this.touchCoordinatesFromEvent(event);
     }
 
@@ -52,7 +61,7 @@ export default class {
   }
 
   shouldRotate(event) {
-    return !!event.buttons || !!event.touches;
+    return this.mousePressed || this.touchPressed;
   }
 
   userStoppedRotating() {
