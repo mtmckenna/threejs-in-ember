@@ -60,11 +60,7 @@ export default class {
     return { x: event.touches[0].clientX, y: event.touches[0].clientY };
   }
 
-  shouldRotate(event) {
-    return this.mousePressed(event) || this.touchPressed(event);
-  }
-
-  userStoppedRotating() {
+  reset() {
     this.currentCoordinates = null;
   }
 }

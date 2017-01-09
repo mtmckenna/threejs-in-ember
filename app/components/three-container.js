@@ -116,27 +116,35 @@ export default Ember.Component.extend({
     glRenderer.render(this.get('scene'), this.get('camera'));
   },
 
+  touchStart() {
+    this.set('rotating', true);
+  },
+
   touchMove(event) {
-    this.mouseMove(event);
-  },
-
-  touchEnd() {
-    this.mouseUp();
-  },
-
-  mouseMove(event) {
     this.handleUserRotation(event);
     event.preventDefault();
   },
 
+  touchEnd() {
+    this.set('rotating', false);
+    this.get('rotator').reset();
+  },
+
+  mouseMove(event) {
+    this.touchMove(event);
+  },
+
   mouseUp() {
-    this.get('rotator').userStoppedRotating();
+    this.touchEnd();
+  },
+
+  mouseDown() {
+    this.touchStart();
   },
 
   handleUserRotation(event) {
-    let rotator = this.get('rotator');
-    if (!rotator.shouldRotate(event)) { return; }
-    let { x, y } = rotator.rotationDeltas(event);
+    if (!this.get('rotating')) { return; }
+    let { x, y } = this.get('rotator').rotationDeltas(event);
     this.rotate(x, y);
   },
 
